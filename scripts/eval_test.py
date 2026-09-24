@@ -82,7 +82,7 @@ def main():
     tw = sample_onset_relative(splits["test"], test_pats, N_TEST, QUOTAS,
                                SEED_TEST)
     tee = Tee()
-    tb = get_batches_cached(tw, 64.0, fs, tee, "testrep")
+    tb = get_batches_cached(tw, 64.0, fs, tee, "testrep", sharded=True)
 
     mses, maes, corrs, pats, kinds = [], [], [], [], []
     ch_mse = np.zeros(22)

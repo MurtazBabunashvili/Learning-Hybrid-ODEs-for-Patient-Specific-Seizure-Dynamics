@@ -84,7 +84,8 @@ def load_model_and_val(cfg_name: str, ckpt_name: str, n_val: int):
     # NOTE: tag MUST be "val" (identical call as training) or the cache
     # lookup misses by filename and reloads full EDFs.
     batches = get_batches_cached(wins, float(data["target_fs"]),
-                                 float(data["ode_fs"]), Tee(), "val")
+                                 float(data["ode_fs"]), Tee(), "val",
+                                 sharded=True)
     fs = float(data["ode_fs"])
     pre = int(round(float(data["prefix_sec"]) * fs))
     hor = int(round(float(data["horizon_sec"]) * fs))

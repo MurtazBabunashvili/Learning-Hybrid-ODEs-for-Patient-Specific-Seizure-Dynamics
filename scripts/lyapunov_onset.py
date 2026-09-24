@@ -180,7 +180,7 @@ def main():
                     s += 30.0
     ana_wins += inter_wins
     tee.log(f"onset-analysis windows: {len(ana_wins)}")
-    ab = get_batches_cached(ana_wins, 64.0, fs, tee, "ana")
+    ab = get_batches_cached(ana_wins, 64.0, fs, tee, "ana", sharded=True)
 
     # ---------- S(t) tagged by time-to-onset ----------
     pre_vals, inter_vals, ict_vals, traces = [], [], [], []
@@ -271,7 +271,7 @@ def main():
                                300, {"interictal": 0.4, "preictal_far": 0.2,
                                      "preictal_near": 0.2, "ictal": 0.1,
                                      "postictal": 0.1}, 7)
-    tb = get_batches_cached(tw, 64.0, fs, tee, "testrep")
+    tb = get_batches_cached(tw, 64.0, fs, tee, "testrep", sharded=True)
     mses, corrs, pats, kinds = [], [], [], []
     ch_mse = np.zeros(22)
     ch_n = np.zeros(22)
