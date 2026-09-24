@@ -381,7 +381,7 @@ def load_data():
         all_patients,
         patient_to_idx,
         mu,
-        eigvecs,
+        init_H,
     )
 
 
@@ -707,13 +707,12 @@ def main():
         patient_ids,
         patient_to_idx,
         mu,
-        eigvecs,
+        init_H,
     ) = load_data()
 
     # Fixed empirical mean + PCA basis from load_data (streamed, no stacking).
     # H remains trainable, but this avoids an arbitrary random observation
     # map at step zero. The PCA is not the state representation used later.
-    init_H = eigvecs[:, -STATE_DIM:]
 
     logger.log(
         "observation model: y = mu + Hx, H=22x5 (110 params), "
