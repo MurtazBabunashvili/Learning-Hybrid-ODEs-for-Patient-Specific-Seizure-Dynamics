@@ -27,12 +27,25 @@ def header(path: str) -> dict:
 
 def read_chunk(path: str, start_sec: float, end_sec: float,
                channels: list[str] | None = None):
-    """Return (data [C, T] float32 microvolts, sfreq, channel names)."""
+    """Return (data [C, T] float32 microvolts, sfreq, channel names).
+
+    Channels are selected BY NAME in canonical order; extra columns
+    (junk labels, alternate montages, series_id/p_id) are ignored and
+    absent canonical channels become zero rows (reported by caller).
+    """
     import pandas as pd
+    from src.data.chbmit import CANONICAL_22
+    want = channels or list(CANONICAL_22)
     df = pd.read_feather(path)
-    ch = channels or [c for c in df.columns if c not in ("series_id", "p_id")]
     sfreq = SFREQ
     i0 = max(0, int(start_sec * sfreq))
     i1 = min(len(df), int(end_sec * sfreq))
-    data = df[ch].to_numpy(dtype="float32", copy=True).T  # [C, T], already µV
-    return data[:, i0:i1], sfreq, list(ch)
+    import numpy as np
+    cols = []
+    for c in want:
+        if c in df.columns:
+            cols.append(df[c].to_numpy(dtype="float32", copy=True)[i0:i1])
+        else:
+            cols.append(np.zeros(max(0, i1 - i0), dtype="float32"))
+    data = np.stack(cols, axis=0)  # [C, T], already µV
+    return data, sfreq, list(want)

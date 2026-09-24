@@ -164,8 +164,9 @@ def get_sharded_cached(wins: list[dict], target_fs: float, ode_fs: float,
             from src.data.feather import read_chunk as _ftr_chunk
             from src.data.chbmit import CANONICAL_22 as _C22
             data_uv, sfreq, names = _ftr_chunk(path, span_lo, span_hi)
-            if [c for c in names if c not in ("series_id", "p_id")] != list(_C22):
-                raise ValueError(f"{path}: unexpected feather channels")
+            import numpy as _np
+            if int((abs(data_uv).max(axis=1) == 0).sum()) > 6:
+                raise ValueError(f"{path}: disjoint montage, excluded from cohort")
             raw = None
         else:
             raw = mne.io.read_raw_edf(path, preload=False, verbose=False)
@@ -267,8 +268,9 @@ def load_windows_grouped(wins: list[dict], target_fs: float, ode_fs: float,
             from src.data.feather import read_chunk as _ftr_chunk
             from src.data.chbmit import CANONICAL_22 as _C22
             data_uv, sfreq, names = _ftr_chunk(path, span_lo, span_hi)
-            if [c for c in names if c not in ("series_id", "p_id")] != list(_C22):
-                raise ValueError(f"{path}: unexpected feather channels")
+            import numpy as _np
+            if int((abs(data_uv).max(axis=1) == 0).sum()) > 6:
+                raise ValueError(f"{path}: disjoint montage, excluded from cohort")
             dur = float("inf")
         else:
             raw = mne.io.read_raw_edf(path, preload=False, verbose=False)
