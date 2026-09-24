@@ -157,19 +157,30 @@ def get_sharded_cached(wins: list[dict], target_fs: float, ode_fs: float,
         r, path, items = args
         _tsafe_log(tee, f"{tag}: loading recording {r + 1}/{total_recs} "
                         f"{Path(path).name} ({len(items)} windows) ...")
-        raw = mne.io.read_raw_edf(path, preload=False, verbose=False)
-        sfreq = float(raw.info["sfreq"])
-        cidx = canonicalize_indices(list(raw.ch_names))
-        if sum(i < 0 for i in cidx) > 6:
-            raise ValueError(f"{path}: disjoint montage, excluded from cohort")
         span_lo = max(0.0, min(float(w["start_sec"]) for _, w in items) - _MARGIN_SEC)
         span_hi = max(float(w["end_sec"]) for _, w in items) + _MARGIN_SEC
-        dur = float(raw.n_times) / sfreq
-        raw.crop(tmin=span_lo, tmax=min(span_hi, dur), include_tmax=False)
-        raw.load_data(verbose=False)
-        data_uv = canonicalize_matrix(raw.get_data(), cidx) * 1e6  # (22, T)
+        if path.lower().endswith(".ftr"):
+            # Feather seizure dataset: 256 Hz float16 µV, canonical columns.
+            from src.data.feather import read_chunk as _ftr_chunk
+            from src.data.chbmit import CANONICAL_22 as _C22
+            data_uv, sfreq, names = _ftr_chunk(path, span_lo, span_hi)
+            if [c for c in names if c not in ("series_id", "p_id")] != list(_C22):
+                raise ValueError(f"{path}: unexpected feather channels")
+            raw = None
+        else:
+            raw = mne.io.read_raw_edf(path, preload=False, verbose=False)
+            sfreq = float(raw.info["sfreq"])
+            cidx = canonicalize_indices(list(raw.ch_names))
+            if sum(i < 0 for i in cidx) > 6:
+                raise ValueError(f"{path}: disjoint montage, excluded from cohort")
+            dur = float(raw.n_times) / sfreq
+            raw.crop(tmin=span_lo, tmax=min(span_hi, dur), include_tmax=False)
+            raw.load_data(verbose=False)
+            data_uv = canonicalize_matrix(raw.get_data(), cidx) * 1e6  # (22, T)
+            del raw
         x_full, fs = preprocess_chunk(data_uv, sfreq, target_fs)
-        del data_uv, raw
+        del data_uv
+        del raw  # noqa: defined in the EDF branch above; feather path skips it
         shard = []
         for gi, w in items:
             i0 = int((float(w["start_sec"]) - span_lo) * fs)
