@@ -23,8 +23,9 @@ model:
 
 train:
   batch_size: 8192
-  # No micro-batching: the full batch fits in 24 GB at 32 Hz.
-  micro_batch: 0
+  # VRAM micro-batching: effective batch stays 8192 (exact accumulated
+  # gradients); peak memory is set by the micro-batch (1024 x 1920 steps).
+  micro_batch: 1024
   n_train: 50000
   n_val: 120
   epochs: 50
