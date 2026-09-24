@@ -351,18 +351,20 @@ def load_data():
         mu_sum += y.sum(dim=(0, 1))
         mu_n += y.shape[0] * y.shape[1]
     mu = (mu_sum / mu_n).float()
-    cov = torch.zeros(N_CHANNELS, N_CHANNELS, dtype=torch.float64)
-    cov_n = 0
-    for i in range(len(train_items)):
-        yc = train_items[i]["y"].to(torch.float64) - mu.double().unsqueeze(-1)
-        flat = yc.reshape(-1, N_CHANNELS)
-        cov += flat.T @ flat
-        cov_n += flat.shape[0]
-    cov = cov / max(cov_n - 1, 1)
-    # Diagonal jitter: zero-filled channels (disjoint montages) make the
-    # covariance exactly singular and eigh fails to converge otherwise.
-    cov = cov + 1e-6 * torch.eye(N_CHANNELS, dtype=torch.float64)
-    eigvals, eigvecs = torch.linalg.eigh(cov.float())
+    # PCA/SVD initialization ONLY for H (streamed SVD sample: immune to
+    # singular/repeated-eigenvalue covariances from duplicated or
+    # zero-filled channels, where eigh fails to converge).
+    _svd_buf, _svd_max = [], 256
+    _stride = max(1, len(train_items) // _svd_max)
+    for i in range(0, len(train_items), _stride):
+        _svd_buf.append(train_items[i]["y"].to(torch.float64) - mu.double().unsqueeze(-1))
+        if len(_svd_buf) >= _svd_max:
+            break
+    _flat = torch.cat([w.reshape(-1, N_CHANNELS) for w in _svd_buf], dim=0)
+    del _svd_buf
+    _, _, _Vh = torch.linalg.svd(_flat.float(), full_matrices=False)
+    del _flat
+    init_H = _Vh[:STATE_DIM].T.contiguous()
 
     logger.log(f"train_windows={len(train_items)} val_windows={len(val_items)} "
                f"(streamed, peak RAM flat)")
