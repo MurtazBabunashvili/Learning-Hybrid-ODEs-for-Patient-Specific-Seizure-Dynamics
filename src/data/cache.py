@@ -9,7 +9,7 @@ import hashlib
 import json
 from pathlib import Path
 
-PREPROCESS_VERSION = "v5"  # v5: region-cropped reads (margin 30s)
+PREPROCESS_VERSION = "v6"  # v6: NaN feather channels zero-filled at read
 
 _DEFAULT_PREPROC: dict = {
     "l_freq": 0.5,
