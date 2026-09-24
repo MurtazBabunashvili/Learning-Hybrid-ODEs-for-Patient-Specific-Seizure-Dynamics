@@ -59,6 +59,23 @@ def test_feather_header_and_chunk(tmp_path):
     assert len(raw.ch_names) >= 22
 
 
+def test_feather_nan_zero_filled(tmp_path):
+    import pandas as pd
+    from src.data.feather import read_chunk
+    n = 2560
+    rng = np.random.default_rng(1)
+    cols = {c: rng.normal(0, 50, n).astype(np.float16) for c in CANONICAL_22}
+    cols["T7-FT9"] = np.full(n, np.nan, dtype=np.float16)
+    cols["series_id"] = pd.Categorical(["x"] * n)
+    cols["p_id"] = ["chb99"] * n
+    df = pd.DataFrame(cols)
+    p = tmp_path / "nan.ftr"
+    df.to_feather(p)
+    data, sf, _ = read_chunk(str(p), 0.0, 10.0)
+    assert bool(np.isfinite(data).all())
+    assert (data[CANONICAL_22.index("T7-FT9")] == 0).all()
+
+
 def test_feather_matches_edf_values(tmp_path):
     import mne
     mne.set_log_level("ERROR")

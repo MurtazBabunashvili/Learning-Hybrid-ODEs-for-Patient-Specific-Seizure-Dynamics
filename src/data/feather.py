@@ -48,4 +48,8 @@ def read_chunk(path: str, start_sec: float, end_sec: float,
         else:
             cols.append(np.zeros(max(0, i1 - i0), dtype="float32"))
     data = np.stack(cols, axis=0)  # [C, T], already µV
+    # Missing channels are stored as NaN (e.g. T7-FT9/FT9-FT10/FT10-T8 in
+    # files whose montage lacks the temporal chain). Zero-fill, identical
+    # to what EDF files with absent channels receive downstream.
+    data = np.nan_to_num(data, nan=0.0, posinf=0.0, neginf=0.0).astype(np.float32)
     return data, sfreq, list(want)
