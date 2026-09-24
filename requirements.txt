@@ -1,6 +1,5 @@
 mne
 pyedflib
-torch
 torchdiffeq
 numpy
 scipy
