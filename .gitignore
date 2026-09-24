@@ -1,8 +1,9 @@
 # Data (CHB-MIT, ~40 GB, downloadable from PhysioNet - never commit)
-data/
+# NOTE: anchored to root so src/data/ (pipeline code) still commits.
+/data/
 
 # Generated artifacts (manifests, splits, caches, checkpoints, metrics, figures)
-artifacts/
+/artifacts/
 
 # Model weights anywhere
 *.pt
