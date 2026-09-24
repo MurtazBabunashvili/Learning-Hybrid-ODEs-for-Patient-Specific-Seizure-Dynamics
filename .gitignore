@@ -1,0 +1,24 @@
+# Data (CHB-MIT, ~40 GB, downloadable from PhysioNet - never commit)
+data/
+
+# Generated artifacts (manifests, splits, caches, checkpoints, metrics, figures)
+artifacts/
+
+# Model weights anywhere
+*.pt
+
+# Local archives / backups
+legacy_backup.zip
+Project.zip
+
+# Environments and IDE
+.venv/
+.idea/
+
+# Caches and bytecode
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Loose logs
+*.log

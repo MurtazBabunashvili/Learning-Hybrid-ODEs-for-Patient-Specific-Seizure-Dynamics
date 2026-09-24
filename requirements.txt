@@ -1,0 +1,9 @@
+mne
+pyedflib
+torch
+torchdiffeq
+numpy
+scipy
+pandas
+matplotlib
+pyyaml

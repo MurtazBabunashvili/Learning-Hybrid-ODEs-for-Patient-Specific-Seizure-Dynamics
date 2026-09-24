@@ -1,0 +1,60 @@
+# hybrid + experimental Lyapunov hinge (loss.lambda_lyapunov)
+# Single configuration for the whole experiment (main.py).
+# main.py reads this file; nothing else configures the run.
+
+seed: 0
+# device: auto | cpu | cuda
+device: auto
+
+data:
+  target_fs: 64.0
+  ode_fs: 16.0
+  window_sec: 30.0
+  prefix_sec: 10.0
+  horizon_sec: 20.0
+  n_channels: 22
+  state_dim: 5
+
+# Experiment selection: mechanistic | pure_neural | hybrid | hybrid_lyapunov
+# (src/experiments/). This is the ONLY switch that changes the science;
+# everything else below is shared infrastructure.
+experiment:
+  name: hybrid_lyapunov
+
+model:
+  residual_hidden: 128
+
+train:
+  batch_size: 128
+  n_train: 1500
+  n_val: 120
+  epochs: 5
+  lr: 0.0003
+
+state_estimation:
+  inner_steps: 3
+  lr: 0.02
+  ridge: 0.0001
+  # Trust region: cubic Epileptor + Euler dt=1/16 unstable outside ~±2.5.
+  clamp: 2.5
+
+loss:
+  lambda_residual: 0.001
+  lambda_lyapunov: 0.01
+  lyapunov_margin: 0.0
+
+split:
+  train_patients: [chb01, chb02, chb03, chb06, chb07, chb08, chb09, chb10, chb11, chb12, chb13, chb14, chb15, chb16, chb17, chb18, chb20, chb21]
+  val_patients: [chb04, chb19, chb23]
+  test_patients: [chb05, chb22, chb24]
+  quotas:
+    interictal: 0.4
+    preictal_far: 0.2
+    preictal_near: 0.2
+    ictal: 0.1
+    postictal: 0.1
+
+paths:
+  ckpt: artifacts/checkpoints/hybrid_lyapunov.pt
+  log: artifacts/metrics/hybrid_lyapunov.log
+
