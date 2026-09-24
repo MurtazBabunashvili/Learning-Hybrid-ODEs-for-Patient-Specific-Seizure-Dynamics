@@ -359,6 +359,9 @@ def load_data():
         cov += flat.T @ flat
         cov_n += flat.shape[0]
     cov = cov / max(cov_n - 1, 1)
+    # Diagonal jitter: zero-filled channels (disjoint montages) make the
+    # covariance exactly singular and eigh fails to converge otherwise.
+    cov = cov + 1e-6 * torch.eye(N_CHANNELS, dtype=torch.float64)
     eigvals, eigvecs = torch.linalg.eigh(cov.float())
 
     logger.log(f"train_windows={len(train_items)} val_windows={len(val_items)} "
